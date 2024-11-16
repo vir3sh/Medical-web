@@ -49,8 +49,8 @@ const DoctorRegister = () => {
         localStorage.setItem('doctorProfilePicture', profilePicture || '');
       }
 
-      // Redirect to the doctor profile page
-      navigate('/doctor-profile'); // Corrected route path for navigation
+      // Redirect to the doctor login page after successful registration
+      navigate('/doctor-login'); // Navigate to the login page after registration
     } catch (error) {
       console.error(error);
       alert('Error registering doctor');

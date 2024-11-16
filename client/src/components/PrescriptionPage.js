@@ -71,61 +71,71 @@ const PrescriptionPage = () => {
       alert('Failed to send the reply.');
     }
   };
-  
-  
+
+  // Check if there are no valid messages or no patientIds
+  const noConsultations = messages.length === 0 || !messages.some(message => message.patientId);
+
   return (
     <div style={{ padding: '20px' }}>
-      <h1 >Consultation  </h1>
-      <div className="message-list">
-        {messages.map((message) => (
-          <div key={message._id} className="message-card" style={cardStyles}>
-            <h3>{message.patientId.name}</h3>
-            <p><strong>Illness History:</strong> {message.illnessHistory}</p>
-            <p><strong>Recent Surgery:</strong> {message.recentSurgery}</p>
-            <p><strong>Diabetic Status:</strong> {message.isDiabetic ? 'Yes' : 'No'}</p>
-            <p><strong>Allergies:</strong> {message.allergies}</p>
-            <p><strong>Other Info:</strong> {message.others}</p>
-            <p><strong>Sent At:</strong> {new Date(message.sentAt).toLocaleString()}</p>
+      <h1>Consultation</h1>
+      
+      {/* Display message when there are no consultations */}
+      {noConsultations ? (
+        <h5>No consultations available.</h5> 
+      ) : (
+        <div className="message-list">
+          {messages.map((message) => (
+            message.patientId && (  // Ensure there's a valid patientId
+              <div key={message._id} className="message-card" style={cardStyles}>
+                <h3>Name:{message.patientId.name}</h3>
+                <p><strong>Illness History:</strong> {message.illnessHistory}</p>
+                <p><strong>Recent Surgery:</strong> {message.recentSurgery}</p>
+                <p><strong>Diabetic Status:</strong> {message.isDiabetic ? 'Yes' : 'No'}</p>
+                <p><strong>Allergies:</strong> {message.allergies}</p>
+                <p><strong>Other Info:</strong> {message.others}</p>
+                <p><strong>Sent At:</strong> {new Date(message.sentAt).toLocaleString()}</p>
 
-            <button
-              onClick={() => setReplyMessage(message._id)}
-              className="reply-button"
-            >
-              Reply
-            </button>
+                <button
+                  onClick={() => setReplyMessage(message._id)}
+                  className="reply-button"
+                >
+                  Reply
+                </button>
 
-            {replyMessage === message._id && (
-              <form onSubmit={(e) => handleReplySubmit(e, message._id, message.patientId._id)}>
-                <div className="reply-form">
-                  <h4>Prescription Reply</h4>
-                  <textarea
-                    name="careToBeTaken"
-                    placeholder="Care to be taken..."
-                    value={prescriptionData.careToBeTaken}
-                    onChange={handleReplyChange}
-                    required
-                  />
-                  <textarea
-                    name="medicines"
-                    placeholder="Medicines..."
-                    value={prescriptionData.medicines}
-                    onChange={handleReplyChange}
-                    required
-                  />
-                  <button type="submit">Send Reply</button>
-                  <button
-                    type="button"
-                    onClick={() => setReplyMessage(null)}
-                    className="cancel-button"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        ))}
-      </div>
+                {replyMessage === message._id && (
+                  <form onSubmit={(e) => handleReplySubmit(e, message._id, message.patientId._id)}>
+                    <div className="reply-form">
+                      <h4>Prescription Reply</h4>
+                      <textarea
+                        name="careToBeTaken"
+                        placeholder="Care to be taken..."
+                        value={prescriptionData.careToBeTaken}
+                        onChange={handleReplyChange}
+                        required
+                      />
+                      <textarea
+                        name="medicines"
+                        placeholder="Medicines..."
+                        value={prescriptionData.medicines}
+                        onChange={handleReplyChange}
+                        required
+                      />
+                      <button type="submit">Send Reply</button>
+                      <button
+                        type="button"
+                        onClick={() => setReplyMessage(null)}
+                        className="cancel-button"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            )
+          ))}
+        </div>
+      )}
     </div>
   );
 };

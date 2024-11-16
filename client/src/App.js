@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import AuthForm from './components/AuthForm';
 import DoctorList from './components/DoctorList';
+import DoctorLogin from './components/DoctorLogin';
 import { DoctorProvider } from './contexts/DoctorContext';  
 import ConsultationForm from './components/ConsultationForm';
 import DoctorProfile from './components/DoctorProfile';
@@ -37,6 +38,8 @@ function App() {
               )
             }
           />
+
+          <Route path="/doctor-login" element={<DoctorLogin />} />
 
           {/* Route for viewing doctors */}
           <Route
