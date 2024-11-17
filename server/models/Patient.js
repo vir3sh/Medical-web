@@ -13,6 +13,7 @@ const patientSchema = new mongoose.Schema({
   replies: [
     {
       doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' },
+      doctorName: { type: String },  // Add doctorName to store the doctor's name
       careToBeTaken: String,
       medicines: String,
       replyDate: Date,
@@ -20,7 +21,6 @@ const patientSchema = new mongoose.Schema({
     },
   ],
 });
-
 
 // Encrypt the patient's password before saving
 patientSchema.pre('save', async function (next) {

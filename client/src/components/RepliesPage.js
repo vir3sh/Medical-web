@@ -26,6 +26,8 @@ const RepliesPage = () => {
         console.error('Error fetching replies:', error);
       }
     };
+    
+    
 
     if (patientId) {
       fetchReplies(); // Fetch replies when patientId is available

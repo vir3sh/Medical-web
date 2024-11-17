@@ -1,5 +1,5 @@
 const express = require('express');
-const Doctor = require('../models/Patirnt'); // Adjust the path as per your folder structure
+const Doctor = require('../models/Patient'); // Adjust the path as per your folder structure
 
 const router = express.Router();
 

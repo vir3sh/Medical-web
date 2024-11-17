@@ -24,8 +24,22 @@ const ConsultationForm = () => {
     }));
   };
 
+  const handleKeyPress = (e) => {
+    // Prevent form submission when pressing Enter
+    if (e.key === 'Enter') {
+      e.preventDefault();
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Ensure all steps are completed
+    if (!formData.illnessHistory || !formData.recentSurgery || !formData.isDiabetic || !formData.allergies || !formData.others) {
+      alert('Please complete all form fields before submitting.');
+      return;
+    }
+
     try {
       await axios.post(
         `http://localhost:5000/api/messages/${doctorId}`, // Send to backend with doctor ID
@@ -47,7 +61,7 @@ const ConsultationForm = () => {
   return (
     <div className="consultation-form-container">
       <h1>Consultation Form</h1>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} onKeyDown={handleKeyPress}>
         {step === 1 && (
           <div className="form-step">
             <h2>Step 1: Current Illness History</h2>

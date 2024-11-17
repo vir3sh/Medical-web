@@ -9,6 +9,11 @@ import DoctorProfile from './components/DoctorProfile';
 import PrescriptionPage from './components/PrescriptionPage';
 import RepliesPage from './components/RepliesPage'; // New Component for Replies
 import ChatPage from './components/ChatPage'; // New Component for Chat
+import AdminLoginPage from './components/AdminLoginPage';
+import AdminDashboard from './components/AdminDashboard';
+import AdminPanel from './components/AdminPanel';
+import DoctorRegister from './components/DoctorRegister';
+import PatientRegister from './components/PatientRegister';
 
 function App() {
   // Check if the doctor is logged in based on the JWT token
@@ -52,7 +57,10 @@ function App() {
               )
             }
           />
-
+          <Route path="/doctors" element={<DoctorList />} />
+          <Route path="/admin-panel" element={<AdminPanel />} />
+          <Route path="/register-doctor" element={<DoctorRegister />} />
+          <Route path="/register-patient" element={<PatientRegister />} />
           {/* Route for the consultation form for a specific doctor */}
           <Route
             path="/consultation/:doctorId"
@@ -76,6 +84,8 @@ function App() {
               )
             }
           />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
           {/* Route for viewing replies from patients */}
           <Route

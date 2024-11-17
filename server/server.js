@@ -11,12 +11,15 @@ const jwt = require('jsonwebtoken');
 const messageRoutes = require('./routes/messageRoutes'); 
 const Message = require('./models/Message');
 const Consultation = require('./models/Consultation');
+const patientRoutes = require('./routes/patientRoutes');
 
 const app = express();
 const router = express.Router();  // Create a router instance
 
 dotenv.config();
-
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => console.log('Error connecting to MongoDB:', err));
 // Middleware setup
 
 app.use(cors({
@@ -24,8 +27,10 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(express.json());
+// app.use('/api/patients', patientRoutes);
 
 // Set up Multer for handling file uploads (e.g., profile pictures)
 const storage = multer.diskStorage({
@@ -38,10 +43,28 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// MongoDB connection setup
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => console.log('Error connecting to MongoDB:', err));
+
+router.get('/api/patients/:id/profilePicture', async (req, res) => {
+  try {
+    const patient = await Patient.findById(req.params.id);
+    if (!patient) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
+    // Check if the patient has a profile picture
+    if (!patient.profilePicture) {
+      return res.status(404).json({ message: 'No profile picture available' });
+    }
+
+    // Construct the full URL to the profile picture
+    const profilePictureUrl = `http://localhost:5000${patient.profilePicture}`;
+    
+    res.json({ profilePictureUrl });
+  } catch (error) {
+    console.error('Error fetching profile picture:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
 
 // Patient Registration Route
 router.post('/register', upload.single('profilePicture'), async (req, res) => {
@@ -59,16 +82,19 @@ router.post('/register', upload.single('profilePicture'), async (req, res) => {
       return res.status(400).json({ message: 'Patient with this email or phone already exists' });
     }
 
+    // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     // Create new patient object
     const patient = new Patient({
-      profilePicture: req.file ? req.file.path : null,
+      profilePicture: req.file ? `/uploads/${req.file.filename}` : null, // Save relative path for profile picture
       name,
       age,
       email,
       phone,
       historyOfSurgery,
       historyOfIllness,
-      password, // Password will be hashed in the model
+      password: hashedPassword, // Save the hashed password
     });
 
     // Save the patient to the database
@@ -79,7 +105,6 @@ router.post('/register', upload.single('profilePicture'), async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
-
 
 // Patient Login Route
 router.post('/login', async (req, res) => {
@@ -204,6 +229,18 @@ router.post('/doctors/register', upload.single('profilePicture'), async (req, re
     res.status(500).json({ message: 'Server error', error });
   }
 });
+
+
+router.get('/patients', async (req, res) => {
+  try {
+    const patients = await Patient.find(); // Fetch all patients
+    res.status(200).json(patients); // Respond with the patients
+  } catch (error) {
+    console.error('Error fetching patients:', error);
+    res.status(500).json({ message: 'Error fetching patients', error });
+  }
+});
+
 
 // Doctor Login
 router.post('/doctors/login', async (req, res) => {
@@ -434,38 +471,95 @@ app.post('/api/messages/reply/:messageId', async (req, res) => {
   }
 });
 // Example backend endpoint to get replies for a specific patient
-app.get('/api/messages/replies/patient/:patientId', async (req, res) => {
-  const { patientId } = req.params; // Get the patientId from the request parameters
-
+router.get('/messages/replies/patient/:patientId', async (req, res) => {
   try {
-    // Find the patient by ID and populate the replies
-    const patient = await Patient.findById(patientId).populate('replies.doctorId', 'name'); // Populate doctorId with doctor's name
+    const patient = await Patient.findById(req.params.patientId).populate({
+      path: 'replies.doctorId', // Populate the doctorId in replies
+      select: 'name', // Select only the doctor's name
+    });
+    
+    if (!patient) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
+    const replies = patient.replies.map(reply => ({
+      doctorName: reply.doctorId ? reply.doctorId.name : 'Unknown', // If doctor is null or undefined, set default value
+      careToBeTaken: reply.careToBeTaken,
+      medicines: reply.medicines,
+      replyDate: reply.replyDate,
+      messageId: reply.messageId,
+    }));
+
+    res.json(replies);
+  } catch (error) {
+    console.error('Error fetching replies:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.delete('/doctors/:id', async (req, res) => {
+  try {
+    const doctor = await Doctor.findByIdAndDelete(req.params.id);
+    if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
+    res.status(200).json({ message: 'Doctor deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting doctor' });
+  }
+});
+
+
+router.get('/patients/:id', async (req, res) => {
+  try {
+    const patientId = req.params.id;
+    
+    // Find the patient by ID
+    const patient = await Patient.findById(patientId).select('-password'); // Exclude password field for security
 
     if (!patient) {
       return res.status(404).json({ message: 'Patient not found' });
     }
 
-    // Check if the patient has any replies
-    if (patient.replies.length === 0) {
-      return res.status(404).json({ message: 'No replies found for this patient' });
-    }
-
-    // Format and return the replies
-    const formattedReplies = patient.replies.map(reply => ({
-      doctorName: reply.doctorId.name, // Doctor's name
-      careToBeTaken: reply.careToBeTaken,
-      medicines: reply.medicines,
-      replyDate: reply.replyDate,
-    }));
-
-    res.json(formattedReplies); // Send the replies as a response
+    // Send patient details as response
+    res.status(200).json(patient);
   } catch (error) {
-    console.error('Error fetching replies:', error);
-    res.status(500).json({ message: 'Failed to fetch replies' });
+    console.error('Error fetching patient details:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
 
+// Delete patient
+router.delete('/patients/:id', async (req, res) => {
+  try {
+    const patient = await Patient.findByIdAndDelete(req.params.id);
+    if (!patient) return res.status(404).json({ message: 'Patient not found' });
+    res.status(200).json({ message: 'Patient deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting patient' });
+  }
+});
+
+// Update doctor
+router.put('/doctors/:id', async (req, res) => {
+  try {
+    const doctor = await Doctor.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
+    res.status(200).json(doctor);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating doctor' });
+  }
+});
+
+// Update patient
+router.put('/patients/:id', async (req, res) => {
+  try {
+    const patient = await Patient.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!patient) return res.status(404).json({ message: 'Patient not found' });
+    res.status(200).json(patient);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating patient' });
+  }
+});
 
 
 // Use the routes
