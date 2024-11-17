@@ -59,7 +59,7 @@ const DoctorRegister = () => {
 
   return (
     <form onSubmit={handleSubmit} className="doctor-form">
-      <h2>Doctor Register</h2>
+      {/* <h2>Doctor Register</h2> */}
 
       <input
         type="text"

@@ -65,7 +65,7 @@ const PatientRegister = () => {
       {message && <div className="success-message">{message}</div>}
       {error && <div className="error-message">{error}</div>}
       <form onSubmit={handleSubmit}>
-        <h2>Patient Registration</h2>
+        {/* <h2>Patient Registration</h2> */}
         <div>
           <label>Name</label>
           <input type="text" name="name" value={formData.name} onChange={handleChange} required />

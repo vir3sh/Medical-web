@@ -59,9 +59,9 @@ const DoctorLogin = () => {
     <>
     
     <form onSubmit={handleSubmit}>
-    <h2>
+    {/* <h2>
       Doctor Login 
-    </h2> 
+    </h2>  */}
       <input
         type="email"
         name="email"
