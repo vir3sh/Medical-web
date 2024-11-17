@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import for navigation
 import axios from 'axios';
+import './admin.css'
 
 const AdminPanel = () => {
   const [doctors, setDoctors] = useState([]);

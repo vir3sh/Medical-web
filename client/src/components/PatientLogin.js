@@ -22,7 +22,7 @@ const PatientLogin = () => {
 
       
 
-      const { id, name, email } = response.data.patient;  // Adjust according to the response data structure
+      const { id } = response.data.patient;  // Adjust according to the response data structure
       localStorage.setItem('patientId', id);  // Store the patient ID
       localStorage.setItem('token', response.data.token); // Optionally store the token
       console.log('Patient ID:', id); // To verify the ID is being stored correctly

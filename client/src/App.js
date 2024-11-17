@@ -14,6 +14,7 @@ import AdminDashboard from './components/AdminDashboard';
 import AdminPanel from './components/AdminPanel';
 import DoctorRegister from './components/DoctorRegister';
 import PatientRegister from './components/PatientRegister';
+import AdminLogin from './components/AdminLogin';
 
 function App() {
   // Check if the doctor is logged in based on the JWT token
@@ -57,8 +58,9 @@ function App() {
               )
             }
           />
-          <Route path="/doctors" element={<DoctorList />} />
-          <Route path="/admin-panel" element={<AdminPanel />} />
+          {/* <Route path="/doctors" element={<DoctorList />} /> */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/panel" element={<AdminPanel />} />
           <Route path="/register-doctor" element={<DoctorRegister />} />
           <Route path="/register-patient" element={<PatientRegister />} />
           {/* Route for the consultation form for a specific doctor */}
@@ -90,13 +92,7 @@ function App() {
           {/* Route for viewing replies from patients */}
           <Route
             path="/replies"
-            element={
-              isDoctorLoggedIn ? (
-                <RepliesPage />
-              ) : (
-                <Navigate to="/" />
-              )
-            }
+            element={<RepliesPage />}
           />
 
           {/* Route for chatting with a patient */}

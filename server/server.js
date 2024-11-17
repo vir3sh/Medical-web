@@ -12,7 +12,7 @@ const messageRoutes = require('./routes/messageRoutes');
 const Message = require('./models/Message');
 const Consultation = require('./models/Consultation');
 const patientRoutes = require('./routes/patientRoutes');
-
+const Admin = require('./models/Admin');
 const app = express();
 const router = express.Router();  // Create a router instance
 
@@ -123,10 +123,11 @@ router.post('/login', async (req, res) => {
     }
 
     // Compare the password with the hashed password in the database
-    const isMatch = await patient.comparePassword(password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
+   const isMatch = await patient.comparePassword(password);
+// console.log('Password comparison result:', isMatch);  // Log comparison result
+if (!isMatch) {
+  return res.status(400).json({ message: 'Invalid credentials' });
+}
 
     // Generate JWT token with an expiration time
     const token = jwt.sign({ id: patient._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
@@ -281,6 +282,32 @@ router.post('/doctors/login', async (req, res) => {
   }
 });
 
+router.post('/admin/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Check if the admin exists
+    const admin = await Admin.findOne({ email });
+    if (!admin) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Compare the entered password with the stored password (since no hashing is used)
+    if (admin.password !== password) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    // Send the token as a response
+    res.json({ token });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 router.get('/doctors/:doctorId', async (req, res) => {
   try {
@@ -425,6 +452,36 @@ app.post('/api/consultations/:doctorId', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Failed to create consultation.' });
+  }
+});
+
+
+router.post('/admin/register', async (req, res) => {
+  const { name, email, password } = req.body;
+
+  try {
+    // Check if the admin already exists
+    const existingAdmin = await Admin.findOne({ email });
+    if (existingAdmin) {
+      return res.status(400).json({ message: 'Admin already exists' });
+    }
+
+    // Create a new admin
+    const newAdmin = new Admin({
+      name,
+      email,
+      password // Store password as plain text
+    });
+
+    // Save the new admin to the database
+    await newAdmin.save();
+
+    // Return a success message
+    res.status(201).json({ message: 'Admin registered successfully' });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
